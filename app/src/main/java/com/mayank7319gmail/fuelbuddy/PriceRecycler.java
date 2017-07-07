@@ -2,6 +2,7 @@ package com.mayank7319gmail.fuelbuddy;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,6 +39,7 @@ public class PriceRecycler extends RecyclerView.Adapter<PriceRecycler.PriceHolde
         holder.tvPetrol.setText(String.valueOf("\u20B9"+currentItem.getPetrolPrice()));
         holder.tvDiesel.setText(String.valueOf("\u20B9"+currentItem.getDieselPrice()));
 
+        Log.d("Fuel Buddy", "onBindViewHolder: price in "+currentItem.getLocation()+" is "+currentItem.getPetrolPrice()+" "+currentItem.getDieselPrice());
     }
 
     @Override

@@ -25,4 +25,19 @@ public class PriceItem {
     public double getDieselPrice() {
         return dieselPrice;
     }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public void setPetrolPrice(double petrolPrice) {
+        this.petrolPrice = petrolPrice;
+    }
+
+    public void setDieselPrice(double dieselPrice) {
+        this.dieselPrice = dieselPrice;
+    }
+
+    public PriceItem() {
+    }
 }
