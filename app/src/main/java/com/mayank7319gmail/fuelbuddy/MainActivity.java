@@ -1,6 +1,10 @@
 package com.mayank7319gmail.fuelbuddy;
 
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -28,8 +32,8 @@ public class MainActivity extends AppCompatActivity {
     PriceApiClient priceApiClient;
     ProgressBar progressBar;
 
-    ArrayList<PriceItem> fuelList;
-    String state = "Telangana";
+    SharedPreferences sharedPref;
+    String state;
 
     public static final String TAG = "Fuel Buddy";
 
@@ -59,10 +63,56 @@ public class MainActivity extends AppCompatActivity {
         tvState.setText(state);
         recyclerFuel.setLayoutManager(new LinearLayoutManager(this));
 
-        setPrice();
+        sharedPref = getPreferences(Context.MODE_PRIVATE);
+        checkFirstRun();
+
+    }
+
+    void checkFirstRun(){
+        if(sharedPref.contains("state")){
+            state = sharedPref.getString("state","Delhi");
+            setPrice();
+        }
+        else {
+            //First Run of app
+            createDisclaimerDialog();
+        }
+    }
+
+    void createDisclaimerDialog(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Disclaimer")
+                .setMessage(R.string.disclaimer)
+                .setPositiveButton(R.string.agree, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        createStatePickerDialog();
+                        dialog.dismiss();
+                    }
+                })
+                .show();
+    }
+
+    void createStatePickerDialog(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Choose state")
+                .setItems(Utils.stateList, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        state = Utils.stateList[which];
+                        SharedPreferences.Editor editor = sharedPref.edit();
+                        editor.putString("state",state);
+                        editor.apply();
+                        setPrice();
+                        dialog.dismiss();
+                    }
+                })
+                .show();
     }
 
     void setPrice(){
+        progressBar.setVisibility(View.VISIBLE);
+        recyclerFuel.setVisibility(View.INVISIBLE);
         if(priceApiClient != null)
             priceApiClient.clearAllRequests();
         tvState.setText(state);
@@ -105,11 +155,13 @@ public class MainActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if(id == R.id.action_rate){
-            //Send intent to google play page
-
-            Toast.makeText(this,"This feature has not been implemented yet.",Toast.LENGTH_SHORT).show();
+        switch (id){
+            case R.id.action_rate:
+                Toast.makeText(this,"This feature has not been implemented yet.",Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.action_state:
+                createStatePickerDialog();
+                break;
         }
 
 

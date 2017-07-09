@@ -31,7 +31,9 @@ public class PriceApiClient {
     private RequestQueue reqQueue;
     private ArrayList<PriceItem> fuelPriceList ;
     //private ArrayList<SubPriceItem> subPetrolList, subDieselList;
-    ArrayList<Double> petrolList,dieselList;
+    private ArrayList<Double> petrolList,dieselList;
+    private LinkExtractor extractor;
+
 
     private Context ctx;
 
@@ -65,7 +67,7 @@ public class PriceApiClient {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        LinkExtractor extractor = new LinkExtractor();
+                        extractor = new LinkExtractor();
                         extractor.execute(stateCode,url);
                     }
                 },
@@ -89,7 +91,6 @@ public class PriceApiClient {
         @Override
         protected Void doInBackground(String... params) {
             try {
-
                 Document doc = Jsoup.connect(params[1]).timeout(20000).get();
                 Elements temp = doc.select("h3.h3State:contains("+params[0].trim()+") + div ").select("div");
 
@@ -156,6 +157,7 @@ public class PriceApiClient {
              String reqUrl = params[1] , type = params[2], cityName = params[0];
 
             try {
+                reqUrl = reqUrl.replace(" ","%20");
                 Document doc = Jsoup.connect(reqUrl).timeout(20000).get();
                 Element data = doc.getElementById("CPH1_lblCurrent");
 
@@ -288,5 +290,6 @@ public class PriceApiClient {
 
     void clearAllRequests(){
         reqQueue.cancelAll(TAG);
+        //extractor.cancel(true);
     }
 }

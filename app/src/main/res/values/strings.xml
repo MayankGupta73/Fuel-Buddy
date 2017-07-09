@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">Fuel Buddy</string>
     <string name="action_settings">Settings</string>
+    <string name="disclaimer">This application uses sources freely available on the internet and other such sources to display data. The developer is in no way responsible for any mishap which may occur due to the use/misuse of the provided data.</string>
+    <string name="agree">I agree</string>
 </resources>
