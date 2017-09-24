@@ -1,10 +1,13 @@
 package com.mayank7319gmail.fuelbuddy;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by Mayank Gupta on 28-06-2017.
  */
 
-public class PriceItem {
+public class PriceItem implements Parcelable{
     private String location;
     private double petrolPrice, dieselPrice;
 
@@ -40,4 +43,36 @@ public class PriceItem {
 
     public PriceItem() {
     }
+
+    protected PriceItem(Parcel in) {
+        location = in.readString();
+        petrolPrice = in.readDouble();
+        dieselPrice = in.readDouble();
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(location);
+        dest.writeDouble(petrolPrice);
+        dest.writeDouble(dieselPrice);
+    }
+
+    @SuppressWarnings("unused")
+    public static final Parcelable.Creator<PriceItem> CREATOR = new Parcelable.Creator<PriceItem>() {
+        @Override
+        public PriceItem createFromParcel(Parcel in) {
+            return new PriceItem(in);
+        }
+
+        @Override
+        public PriceItem[] newArray(int size) {
+            return new PriceItem[size];
+        }
+    };
+
 }

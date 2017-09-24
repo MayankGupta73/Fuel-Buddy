@@ -19,6 +19,7 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 /**
  * Created by Mayank Gupta on 29-06-2017.
@@ -26,7 +27,7 @@ import java.util.ArrayList;
 
 public class PriceApiClient {
 
-    private String urlPetrol = "http://www.mypetrolprice.com/petrol-price-in-india.aspx";
+    private String urlPetrol = "https://www.mypetrolprice.com/petrol-price-in-india.aspx";
     //private String urlDiesel = "http://www.mypetrolprice.com/diesel-price-in-india.aspx";
     private RequestQueue reqQueue;
     private ArrayList<PriceItem> fuelPriceList ;
@@ -34,7 +35,7 @@ public class PriceApiClient {
     private ArrayList<Double> petrolList,dieselList;
     private LinkExtractor extractor;
 
-
+    private String state,date;
     private Context ctx;
 
     private int arraySize=0 ,count =0 ;
@@ -57,12 +58,17 @@ public class PriceApiClient {
 
         /*subPetrolList = new ArrayList<>();
         subDieselList = new ArrayList<>();*/
+
+        state = stateCode;
+         Calendar cal = Calendar.getInstance();
+         date = cal.get(Calendar.DAY_OF_MONTH)+"/"+(cal.get(Calendar.MONTH)+1)+"/"+cal.get(Calendar.YEAR);
         StringRequest request = getRequest(urlPetrol,stateCode);
 
         reqQueue.add(request);
     }
 
      private StringRequest getRequest(final String url, final String stateCode){
+         Log.d(TAG, "getRequest: url "+url);
         final StringRequest stringReq = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
                     @Override
@@ -74,9 +80,9 @@ public class PriceApiClient {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Log.e(TAG, "onErrorResponse: unable to access data from server. type is " + url);
                         Toast.makeText(ctx,"Unable to fetch data. Please try again later.",Toast.LENGTH_SHORT).show();
-
+                        /*Log.d(TAG, "onErrorResponse: cant access site "+error);
+                        error.printStackTrace();*/
                     }
                 });
 
@@ -102,29 +108,22 @@ public class PriceApiClient {
                         String petrolLink = dataItem.absUrl("href");
                         String cityName = getCityName(name);
 
-//                        Log.d(TAG, "doInBackground: test name "+cityName);
-//                        Log.d(TAG, "doInBackground: test link " +petrolLink);
 
                         String dieselLink = petrolLink.replaceAll("Petrol","Diesel");
-//                        Log.d(TAG, "doInBackground: test diesel link "+dieselLink);
 
-//                        SubPriceItem tempItem = new SubPriceItem(cityName, 0, 0);
                         if(checkName(fuelPriceList,cityName)){
                             fuelPriceList.add(new PriceItem(cityName,0.0,0.0));
 
-//                            subPetrolList.add(tempItem);                    //Fetch Petrol
-                            publishProgress(cityName,petrolLink,"p");
-
-//                            subDieselList.add(tempItem);                    //Fetch Diesel
-                            publishProgress(cityName,dieselLink,"d");
+                            publishProgress(cityName,petrolLink,"p"); //Access petrol price
+                            publishProgress(cityName,dieselLink,"d"); //Access diesel price
                         }
 
                     }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                Log.e(TAG, "getFuelPriceList: error jsoup" );
                 Toast.makeText(ctx,"Unable to fetch data. Please try again later.",Toast.LENGTH_SHORT).show();
+//                Log.d(TAG, "doInBackground: failure in parsing "+e.toString());
             }
 
             return null;
@@ -142,10 +141,7 @@ public class PriceApiClient {
             super.onPostExecute(aVoid);
 
             arraySize = fuelPriceList.size();
-//            Log.d(TAG, "onPostExecute: arraySize "+arraySize);
 
-//            if(!(subDieselList == null || subPetrolList == null || subPetrolList.isEmpty() || subDieselList.isEmpty()))
-//                createPriceList();
         }
     }
 
@@ -164,38 +160,21 @@ public class PriceApiClient {
                 String temp = data.text();
                 int index = ("Current "+cityName+" Petrol Price = ").length();
                 String extract = temp.substring(index,index+5).trim();
-                Log.d(TAG, "doInBackground: "+extract);
                 Double price;
                 if(extract.contains("R")) {
                      price = Double.valueOf(extract.substring(0, 2));
                 }
                 else  price = Double.valueOf(extract);
 
-                Log.d(TAG, "doInBackground: price of "+type+" in "+cityName+" is "+price);
 
                 if(type.equals("p")){
-                    /*for(SubPriceItem subP: subPetrolList){
-                        if(subP.getCity().equals(cityName)) {
-                            subP.price = price;
-                            petrolList.add(price);
-                            Log.d(TAG, "doInBackground: added "+subP.getPrice()+" to petrol index "+subPetrolList.indexOf(subP));
-                        }
-                    }
-*/
-//                    Log.d(TAG, "doInBackground: petrol "+price);
+
                     int x =petrolList.size();
                     if(cityName.equals(fuelPriceList.get(x).getLocation()))
                     petrolList.add(price);
                 }
                 else if(type.equals("d")){
-                    /*for(SubPriceItem subD: subDieselList){
-                        if(subD.getCity().equals(cityName)) {
-                            subD.price = price;
-                            dieselList.add(price);
-                            Log.d(TAG, "doInBackground: added " + subD.getPrice() + " to diesel index "+subDieselList.indexOf(subD));
-                        }
-                    }*/
-//                    Log.d(TAG, "doInBackground: diesel "+price);
+
                     int x =dieselList.size();
                     if(cityName.equals(fuelPriceList.get(x).getLocation()))
                     dieselList.add(price);
@@ -203,7 +182,6 @@ public class PriceApiClient {
 
             } catch (IOException e) {
                 e.printStackTrace();
-                Log.e(TAG, "doInBackground: error getting price of "+reqUrl);
                 if(type.equals("d")){
                     fuelPriceList.remove(petrolList.size());
                     count -=2;
@@ -219,19 +197,9 @@ public class PriceApiClient {
 
             if(count < 2*arraySize-1) {
                 count++;
-                Log.d(TAG, "onPostExecute: count "+count);
             }else {
 
-                /*Log.d(TAG, "onPostExecute: petrol list");
-                for(SubPriceItem sub1: subPetrolList)
-                    Log.d(TAG, "onPostExecute: "+sub1.getCity()+sub1.getPrice());
-
-                Log.d(TAG, "onPostExecute: diesel list");
-                for(SubPriceItem sub: subDieselList)
-                    Log.d(TAG, "onPostExecute: "+sub.getCity()+sub.getPrice());*/
-
                 createNewList();
-               // createPriceList();
             }
         }
     }
@@ -251,40 +219,15 @@ public class PriceApiClient {
     }
 
 
-   /* public void createPriceList(){
-        if(subPetrolList == null || subDieselList == null ){
-            Log.e(TAG, "createPriceList: error one of the lists is empty");
-            return;
-        }
-
-        Log.d(TAG, "createPriceList: function was called");
-
-        for(int i=0; i<subPetrolList.size(); i++){
-            fuelPriceList.add(new PriceItem(subPetrolList.get(i).city,subPetrolList.get(i).price,subDieselList.get(i).price));
-
-            PriceItem temp = fuelPriceList.get(i);
-            Log.d(TAG, "createPriceList: price in "+temp.getLocation()+" is "+temp.getPetrolPrice()+" "+temp.getDieselPrice());
-        }
-
-        *//*iocPriceList = new ArrayList<>();
-        for(int i=0; i<subPetrolIoc.size(); i++){
-            iocPriceList.add(new PriceItem(subPetrolIoc.get(i).city,subPetrolIoc.get(i).price,subDieselIoc.get(i).price));
-        }*//*
-
-        //Todo set these lists in recycler
-    }*/
-
     private void createNewList(){
-//        Log.d(TAG, "createNewList: function called");
 
         for(int i=0 ; i<petrolList.size();i++){
             fuelPriceList.get(i).setPetrolPrice(petrolList.get(i));
             fuelPriceList.get(i).setDieselPrice(dieselList.get(i));
 
-            /*PriceItem temp = fuelPriceList.get(i);
-            Log.d(TAG, "createNewList: price in "+temp.getLocation()+" is "+temp.getPetrolPrice()+" "+temp.getDieselPrice());*/
         }
-
+        DbUtils.writeToDB(fuelPriceList,state,date,ctx);
+//        Log.d(TAG, "createNewList: write to db");
         ((MainActivity)ctx).setListPrice(fuelPriceList);
     }
 

@@ -22,6 +22,15 @@
         android:layout_gravity="center_vertical|center_horizontal"
         android:visibility="visible" />
 
+    <TextView
+        android:text="Please wait a moment.\nLoading the latest prices!"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tvMessage"
+        android:layout_gravity="center"
+        android:layout_marginTop="50dp"
+        android:textAlignment="center" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -142,7 +151,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:adSize="BANNER"
-        app:adUnitId="ca-app-pub-3940256099942544/6300978111"
+        app:adUnitId="ca-app-pub-5628554689532375/7942444847"
         android:layout_gravity="bottom|center_horizontal">
     </com.google.android.gms.ads.AdView>
 

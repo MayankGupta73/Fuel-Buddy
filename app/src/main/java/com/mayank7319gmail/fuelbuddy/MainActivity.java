@@ -2,7 +2,9 @@ package com.mayank7319gmail.fuelbuddy;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -15,7 +17,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -28,12 +29,13 @@ public class MainActivity extends AppCompatActivity {
 
     AdView mAdView;
     RecyclerView recyclerFuel;
-    TextView tvLocation, tvDate,tvState;
+    TextView tvLocation, tvDate,tvState, tvMessage;
     PriceApiClient priceApiClient;
     ProgressBar progressBar;
+    ArrayList<PriceItem> fuelList;
 
     SharedPreferences sharedPref;
-    String state;
+    String state, date;
 
     public static final String TAG = "Fuel Buddy";
 
@@ -47,36 +49,72 @@ public class MainActivity extends AppCompatActivity {
         tvLocation = (TextView) findViewById(R.id.tvLocation);
         tvDate = (TextView) findViewById(R.id.tvDate);
         tvState = (TextView) findViewById(R.id.tvState);
+        tvMessage = (TextView) findViewById(R.id.tvMessage);
         recyclerFuel = (RecyclerView) findViewById(R.id.recyclerFuel);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
 
-        MobileAds.initialize(this, "ca-app-pub-3940256099942544/6300978111");
-        //TODO: Replace the Ad Unit ID for correct Id also in layout
+        MobileAds.initialize(this, "ca-app-pub-5628554689532375/7942444847");
 
         mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
 
         Calendar cal = Calendar.getInstance();
-        tvDate.setText(cal.get(Calendar.DAY_OF_MONTH)+"/"+cal.get(Calendar.MONTH)+"/"+cal.get(Calendar.YEAR));
+        date = cal.get(Calendar.DAY_OF_MONTH)+"/"+(cal.get(Calendar.MONTH)+1)+"/"+cal.get(Calendar.YEAR);
+        tvDate.setText(date);
 
-        tvState.setText(state);
         recyclerFuel.setLayoutManager(new LinearLayoutManager(this));
 
         sharedPref = getPreferences(Context.MODE_PRIVATE);
-        checkFirstRun();
 
+        if(savedInstanceState == null)
+        checkFirstRun();
+        else {
+            fuelList = savedInstanceState.getParcelableArrayList("fuelList");
+            state = savedInstanceState.getString("state");
+            tvState.setText(state);
+
+            if(fuelList == null)
+                checkFirstRun();
+            else setListPrice(fuelList);
+        }
+
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putParcelableArrayList("fuelList",fuelList);
+        outState.putString("state",state);
+        super.onSaveInstanceState(outState);
     }
 
     void checkFirstRun(){
         if(sharedPref.contains("state")){
             state = sharedPref.getString("state","Delhi");
-            setPrice();
+
+            checkDbState();
         }
         else {
             //First Run of app
             createDisclaimerDialog();
         }
+    }
+
+    void checkDbState(){
+        DbItem item = DbUtils.readFromDB(this,state);
+
+        if(item != null && item.date.equals(date)){
+//            Log.d(TAG, "checkFirstRun: using db");
+            progressBar.setVisibility(View.VISIBLE);
+            tvMessage.setVisibility(View.VISIBLE);
+            recyclerFuel.setVisibility(View.INVISIBLE);
+
+            tvState.setText(state);
+
+            setListPrice(item.fuelList);
+        }
+        else
+            setPrice();
     }
 
     void createDisclaimerDialog(){
@@ -103,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
                         SharedPreferences.Editor editor = sharedPref.edit();
                         editor.putString("state",state);
                         editor.apply();
-                        setPrice();
+                        checkDbState();
                         dialog.dismiss();
                     }
                 })
@@ -112,6 +150,7 @@ public class MainActivity extends AppCompatActivity {
 
     void setPrice(){
         progressBar.setVisibility(View.VISIBLE);
+        tvMessage.setVisibility(View.VISIBLE);
         recyclerFuel.setVisibility(View.INVISIBLE);
         if(priceApiClient != null)
             priceApiClient.clearAllRequests();
@@ -121,16 +160,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void setListPrice(ArrayList<PriceItem> fuelList){
-        Log.d("Fuel Buddy", "setListPrice: list size "+fuelList.size());
-
-        for(PriceItem item :fuelList)
-        Log.d(TAG, "createNewList: price in "+item.getLocation()+" is "+item.getPetrolPrice()+" "+item.getDieselPrice());
-
+        this.fuelList = fuelList;
         PriceRecycler priceRecycler = new PriceRecycler(fuelList,this);
 
         recyclerFuel.setAdapter(priceRecycler);
         recyclerFuel.setVisibility(View.VISIBLE);
         progressBar.setVisibility(View.GONE);
+        tvMessage.setVisibility(View.GONE);
     }
 
     @Override
@@ -157,7 +193,9 @@ public class MainActivity extends AppCompatActivity {
 
         switch (id){
             case R.id.action_rate:
-                Toast.makeText(this,"This feature has not been implemented yet.",Toast.LENGTH_SHORT).show();
+                Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.mayank7319gmail.fuelbuddy"));
+                startActivity(i);
+//                Toast.makeText(this,"This feature has not been implemented yet.",Toast.LENGTH_SHORT).show();
                 break;
             case R.id.action_state:
                 createStatePickerDialog();
