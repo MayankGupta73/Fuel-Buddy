@@ -19,3 +19,8 @@ If you like the app please recommend it to your friends and family.
 DISCLAIMER:
 The app utilizes freely available sources from the internet and therefore the data may not be completely accurate. The developer is not not responsible for any mishap which may occur due to the use of such data. User discretion is advised.
 
+
+<h2> Screenshots </h3>
+<img src="screens/f1.png" width="250" height="450">
+<img src="screens/f2.png" width="250" height="450">
+<img src="screens/f3.png" width="250" height="450">
