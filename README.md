@@ -3,6 +3,8 @@
 A basic Android App to fetch the current petrol/diesel prices in an area.
 Currently is slow but I aim to add server side code soon to increase the speed greatly.
 
+Google Play Store : https://play.google.com/store/apps/details?id=com.mayank7319gmail.fuelbuddy&rdid=com.mayank7319gmail.fuelbuddy
+
 <h2> Description </h3>
 
 The daily variations in fuel prices across India has led to inconvenience for several consumers. Fuel Buddy aims to change that.
